@@ -91,6 +91,69 @@
         }
     };
 
+    $.tooltipsy.prototype.tipPosition = function(e, elem, origin, preferred) {
+        var base = this
+            , availableOffsets = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]]
+            , viewportWidth = $(window).width()
+            , viewportHeight = $(window).height()
+            , viewportLeft = $(window).scrollLeft()
+            , viewportTop = $(window).scrollTop()
+            , width = base.$el.outerWidth()
+            , height = base.$el.outerHeight();
+        
+        if ($.isArray(preferred) && preferred.length > 0) {
+            if (!$.isArray(preferred[0]))
+                preferred = [preferred];
+        }
+
+        var offsets = preferred.concat(availableOffsets);
+        var fallback = null;
+        for (var offi = 0; offi < offsets.length; offi++) {
+            var pos = base.tipPositionOffset(e, offsets[offi], origin);
+            if (offi == 0) {
+                fallback = pos;
+            }
+            if (pos[0] + width - viewportLeft< viewportWidth && pos[0] + width - viewportLeft > 0 && 
+                pos[1] + height - viewportTop < viewportHeight && pos[1] + height - viewportTop > 0)
+                
+                return pos;
+        }
+        return fallback;
+    };
+
+    $.tooltipsy.prototype.tipPositionOffset = function(e, offset, offsetElem) {
+        var base = this;
+        if (base.settings.alignTo === 'cursor' && e) {
+            return [e.pageX + offset[0], e.pageY + offset[1]];
+        }
+        else {
+            return [
+                (function (pos) {
+                    if (offset[0] < 0) {
+                        return pos.left - Math.abs(offset[0]) - base.width;
+                    }
+                    else if (offset[0] === 0) {
+                        return pos.left - ((base.width - base.$el.outerWidth()) / 2);
+                    }
+                    else {
+                        return pos.left + base.$el.outerWidth() + offset[0];
+                    }
+                })(offsetElem),
+                (function (pos) {
+                    if (offset[1] < 0) {
+                        return pos.top - Math.abs(offset[1]) - base.height;
+                    }
+                    else if (offset[1] === 0) {
+                        return pos.top - ((base.height - base.$el.outerHeight()) / 2);
+                    }
+                    else {
+                        return pos.top + base.$el.outerHeight() + offset[1];
+                    }
+                })(offsetElem)
+            ];
+        }
+    };
+
     $.tooltipsy.prototype.show = function (e) {
         var base = this;
 
@@ -115,7 +178,7 @@
         }
 
         if (base.settings.alignTo === 'cursor' && e) {
-            var tip_position = [e.pageX + base.settings.offset[0], e.pageY + base.settings.offset[1]];
+            var tip_position = base.tipPosition(e, base.$tipsy, {left: e.pageX, top: e.pageY}, base.settings.offset);
             if(tip_position[0] + base.width > $(window).width()) {
                 var tip_css = {top: tip_position[1] + 'px', right: tip_position[0] + 'px', left: 'auto'};
             }
@@ -124,30 +187,7 @@
             }
         }
         else {
-            var tip_position = [
-                (function (pos) {
-                    if (base.settings.offset[0] < 0) {
-                        return pos.left - Math.abs(base.settings.offset[0]) - base.width;
-                    }
-                    else if (base.settings.offset[0] === 0) {
-                        return pos.left - ((base.width - base.$el.outerWidth()) / 2);
-                    }
-                    else {
-                        return pos.left + base.$el.outerWidth() + base.settings.offset[0];
-                    }
-                })(base.offset(base.$el[0])),
-                (function (pos) {
-                    if (base.settings.offset[1] < 0) {
-                        return pos.top - Math.abs(base.settings.offset[1]) - base.height;
-                    }
-                    else if (base.settings.offset[1] === 0) {
-                        return pos.top - ((base.height - base.$el.outerHeight()) / 2);
-                    }
-                    else {
-                        return pos.top + base.$el.outerHeight() + base.settings.offset[1];
-                    }
-                })(base.offset(base.$el[0]))
-            ];
+            var tip_position = base.tipPosition(e, base.$tipsy, base.offset(base.$el[0]), base.settings.offset);
         }
         base.$tipsy.css({top: tip_position[1] + 'px', left: tip_position[0] + 'px'});
         base.settings.show(e, base.$tipsy.stop(true, true));
