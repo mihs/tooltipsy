@@ -97,9 +97,7 @@
             , viewportWidth = $(window).width()
             , viewportHeight = $(window).height()
             , viewportLeft = $(window).scrollLeft()
-            , viewportTop = $(window).scrollTop()
-            , width = base.$el.outerWidth()
-            , height = base.$el.outerHeight();
+            , viewportTop = $(window).scrollTop();
         
         if ($.isArray(preferred) && preferred.length > 0) {
             if (!$.isArray(preferred[0]))
@@ -113,8 +111,8 @@
             if (offi == 0) {
                 fallback = pos;
             }
-            if (pos[0] + width - viewportLeft< viewportWidth && pos[0] + width - viewportLeft > 0 && 
-                pos[1] + height - viewportTop < viewportHeight && pos[1] + height - viewportTop > 0)
+            if (pos[0] + base.width - viewportLeft< viewportWidth && pos[0] + base.width - viewportLeft > 0 && 
+                pos[1] + base.height - viewportTop < viewportHeight && pos[1] + base.height - viewportTop > 0)
                 
                 return pos;
         }
